@@ -1,0 +1,248 @@
+
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+
+<HTML LANG="en">
+ <HEAD>
+  <TITLE>Doug Jones's punched card emulation proposal</TITLE>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <META name="viewport" content="width=device-width, initial-scale=1">
+  <META name="Author" content="Douglas W. Jones">
+  <META name="Language" content="English">
+  <META name="editor" content="/usr/bin/vi">
+  
+  
+  
+  <STYLE TYPE="text/css">
+   BODY { margin-left: 3%; margin-right: 3%; }
+   H2.SQUAT { margin-top: 0.4em; margin-bottom: 0.25em; }
+   H3.SQUAT { margin-top: 0.3em; margin-bottom: 0.2em; }
+   H4.SQUAT { margin-top: 0.2em; margin-bottom: 0.15em; }
+   H5.SQUAT { margin-top: 0.17em; margin-bottom: 0.15em; }
+   * { line-height: 1.1 }
+   P.SQUAT { margin-top: 0.25em; margin-bottom: 0.15em; }
+   UL.SQUAT { margin-top: 0.25em; margin-bottom: 0.15em; }
+   EM.O { font-style: normal; text-decoration: overline; }
+   EM.U { font-style: normal; text-decoration: underline; }
+   EM.S { font-style: normal; text-decoration: line-through; }
+   A { text-decoration: none; }
+   A.I { font-style: italic; text-decoration: none; }
+   SUP { vertical-align: 0; position: relative; bottom: 1ex; }
+   SUB { vertical-align: 0; position: relative; top: 0.8ex; }
+   TABLE.BOXY { border: 0; padding: 0; border-spacing: 0;
+                border-collapse: collapse; }
+   TD.BOX { border: solid; border-width: thin; border-color: DimGray;
+	      text-align: center; }
+   TD.BOXTT { border: solid; border-width: thin; border-color: DimGray;
+	      font-family: monospace; text-align: center; }
+   TD.TT { font-family: monospace; text-align: left; }
+   TD.TTSPACE { font-family: monospace; text-align: left; color: white }
+   TD.SHADE { background: Silver; text-align: center; }
+   CAPTION { padding-top: 6px; }
+   DIV.HEADBOX { border: groove; border-width: 2px; background: #F0F0E0; padding-top: 1%; padding-bottom: 1%; padding-left: 5px; }
+   DIV.HEADBOX P { margin-top: 0.8em; margin-bottom: 0.8em; }
+   DIV.HEADBOX H1 { margin-top: 0.2em; margin-bottom: 0.4em; }
+   DIV.HEADBOX H2 { margin-top: 0.2em; margin-bottom: 0.4em; }
+   DIV.INDENT { border: none; padding-left: 1em }
+   DIV.INVISIBLE { font-size: 3px; letter-spacing: -5px; color: white; background: white; }
+   DIV.INVISIBLE A:link { color: white; }
+   DIV.INVISIBLE A:visited { color: white; }
+   DIV.INVISIBLE A:active { color: white; }
+   DIV.invisible A:active { color: white; background: white; }
+  </STYLE>
+ </HEAD>
+ <BODY BGCOLOR="#FFFFFF" TEXT="#000000" link="#0000CC" vlink="#880088" alink="#880088">
+  <DIV CLASS=HEADBOX>
+   
+   <TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0"><TR><TD>&nbsp;&nbsp;<TD>
+    
+     <H1>Emulated Punched Card Decks</H1>
+    
+    
+    <P>
+    
+     Part of <A HREF="index.html">
+      
+      the Punched Card Collection
+      
+     </A>
+     <BR>
+     
+    
+    
+     by
+     <A HREF="http://homepage.cs.uiowa.edu/~dwjones/">Douglas W. Jones</A>
+     
+     <BR>
+    
+    
+    <A HREF="http://www.uiowa.edu/">
+     T<SMALL>HE</SMALL> U<SMALL>NIVERSITY</SMALL>
+    <SMALL>OF</SMALL> I<SMALL>OWA</SMALL></A>
+    <A HREF="http://homepage.cs.uiowa.edu/">Department&nbsp;of&nbsp;Computer&nbsp;Science</A>
+    
+    
+    
+   </TABLE>
+    
+  </DIV>
+ 
+
+
+
+The purpose of this file is to document the card formats I hope will be
+used by developers of emulators for antique computers, so that card "decks"
+punched on one emulator will be readable by others, and so that a standard
+suite of utility software can be used to support "card" processing on all
+such emulators.
+<P>
+The following file format is proposed for use on such emulators:
+<P>
+One column of a card holds 12 bits; in the file, we lay them out as
+follows, with ones representing punched holes:
+<PRE>
+      Top                  Bottom
+        _ _ _ _ _ _ _ _ _ _ _ _
+       |_|_|_|_|_|_|_|_|_|_|_|_|
+      12 11 0 1 2 3 4 5 6 7 8 9
+       |     |                 |
+       |Zone |     Numeric     |
+</PRE>
+Note that there are <A HREF=codes.html>multiple mappings</A> from ASCII
+to card codes, reflecting different keypunches and reflecting
+different interpretations of non-ASCII graphics such as cent-sign and
+logical-not.
+<P>
+A design dilemma presents itself:  There are two rational ways to map card
+columns to byte sequences, highbyter (or bigendian) and lowbyter (or
+littleendian).  The choice is arbitrary.  Here, we will be bigendian
+as follows:
+<PRE>
+               column 1                column 2
+       |_ _ _ _ _ _ _ _ _ _ _ _|_ _ _ _ _ _ _ _ _ _ _ _|
+       |_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|
+       |               |               |               |
+             byte 1          byte 2          byte 3
+</PRE>
+Card files need a distinguished magic number or prefix to prevent
+accidental interpretation of random files as virtual card decks.
+Here, we will use the ASCII prefix "H80", in honor of the FORTRAN
+Hollerith format used to read one card image as uninterpreted text.
+<P>
+This prefix allows extension to H82, where both columns 0 and 81 are
+represented -- note that some verifiers punched in column 0, and that
+IBM 026 keypunches could generally punch column 81.  Emulators should
+generally accept H82 files and ignore the extra leading and trailing columns!
+Similarly H51 can be used to represent the 51 column cards used for some
+business forms, and H53 can be used to represent these cards with data
+punched in columns 0 or 52.  Mixing multiple card sizes in one deck was
+never practical, so emulators need not support it, and most emulators
+need only support H80 (and H82, but ignoring columns 0 and 81).
+<P>
+To support keypunch emulators and card deck display and editing
+programs, a 3 byte prefix is needed on each card.  Emulators that
+read the holes on a card should ignore this prefix (other than
+using it to verify that a card-file is indeed being read).  The
+prefix format is as follows:
+<PRE>
+             byte 1          byte 2         byte 3
+       |_ _ _ _ _ _ _ _|_ _ _ _ _ _ _ _|_ _ _ _ _ _ _ _|
+       |1|_|_|_|_|_|_|_|1|_|_|_|_|_|_|_|1|_|_|_|_|_|_|_|
+       | | Color | |cut| | |     |form | |    logo     |
+                  |       |   |
+                corner    | punch
+                        interp
+</PRE>
+Cards came in many colors, and cream cards (the default) came with pale
+colored stripes coarsely printed across the top margin.  The following color
+selection should be more than sufficient:
+<PRE>
+      Color:  cream (unbleached)      0000 default!
+              white                   0001
+              yellow                  0010
+              pink                    0011
+              pale blue               0100
+              pale green              0101
+              pale orange             0110
+              pale brown              0111 rare
+              yellow stripe           1010 very common!
+              pink stripe             1011
+              pale-blue stripe        1100
+              pale-green stripe       1101
+              pale-orange stripe      1110
+              pale-brown stripe       1111
+</PRE>
+Most cards had rounded corners to prevent fraying, but you could save a bit
+of money by ordering square cornered cards.  One of the top corners of each
+card was usually cut off diagonally.  Cards with no cut and with both top
+corners cut were made!
+<PRE>
+      Corner: round   0  default
+              square  1
+
+      Cut:    neither 00 rare
+              right   01 common
+              left    10 default
+              both    11 rarest
+</PRE>
+Keypunches usually printed on the top edge of the card as they punched.
+Each model of keypunch printed its own interpretation of the character codes
+used, and if a card was punched by a high speed computer-driven punch, it
+was not usually printed.  Any deck of cards could be run through an
+interpreter which overprinted the card with a somewhat eccentric
+interpretation of the data on the card.  Accurate emulation of the particular
+character sets used by different interpreters is probably not necessary
+(most programmers got used to the fact that interpreters hardly ever printed
+in the character set that they wanted!)
+<PRE>
+      Interp: no      0  default
+              yes     1
+
+      Punch:  none            000 punch didn't print
+              026 Commercial  001 older, with &quot;&amp;-#@.&#164;$*,%&quot;
+              026 FORTRAN     010 older, with &quot;+-='.)$*,(&quot;
+              029             100 default
+</PRE>
+Cards could be printed with a number of forms and logos.  Most corporate logo
+cards were based on a standard form, with the logo added in light grey
+in the center of the card.  The set of available forms was open ended,
+and of course, the set of logos was open ended.  This virtual card format
+allows only a few of them (and far too many logos).
+<PRE>
+      Forms:  no printing  000
+              IBM 5081     001 all numeric rows marked (default)
+              IBM 507536   010 only colmns 1, 80 and row 0 marked
+              IBM 5280     011 8 fields, 3-3-3-1 subfields
+              DSI 327      100 8 fields, 5-5 subfields
+              IBM 733727   101 20 fields, 4 chars each
+              IBM 888157   110 FORTRAN column layout
+                           111
+              
+
+      Logo:   none                                  0000000 \ default may
+              (your institution's logo here)        0000001 / vary!
+              IBM 821924 (701 binary)
+              IBM 821162 (701 assembly)
+              IBM 874266 (7090 assembly)
+              Rechenzentrum RWTH Aachen 
+              University of Alaska
+              University of Arizona Computer Center
+              Battelle Laboratories
+              Bell Labs (old style)
+              Bell Labs (GE 600, new style)
+</PRE>
+A matter of philosophy:  The forms listed in the forms category above are
+those which served as the basis for large numbers of institutional overprints!
+There were huge numbers of other standard forms, some of which should be
+probably be assigned as logos and overprinted on the blank form.  As a result,
+these forms cannot have custom logos, but this should not cause great problems
+with users of the full-blown emulator package envisioned.
+Please, if you ever come up with keypunch emulators that support custom
+logos, inform me of the logos you use and reserve their numbers!
+<P>
+
+</BODY>
+</HTML>
